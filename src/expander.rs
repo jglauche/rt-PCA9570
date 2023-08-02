@@ -85,7 +85,7 @@ use crate::guard::LockFreeGuard;
 #[cfg(feature = "spin")]
 use crate::guard::SpinGuard;
 use crate::pins::Pins;
-use alloc::borrow::ToOwned;
+#[cfg(feature = "alloc")]
 use alloc::string::{String, ToString};
 use bitmaps::Bitmap;
 use core::cell::RefCell;
@@ -260,13 +260,13 @@ where
     fn write_conf(&mut self) -> Result<(), <B as Write>::Error> {
         self.bus.write(
             self.address,
-            &[self.configuration.as_value().to_owned()],
+            &[*self.configuration.as_value()],
         )
     }
 
     /// Writes the output register
     pub fn write_output_state(&mut self) -> Result<(), <B as Write>::Error> {
-        self.bus.write(self.address, &[self.output.as_value().to_owned()])
+        self.bus.write(self.address, &[*self.output.as_value()])
     }
 
 }
@@ -289,6 +289,7 @@ impl<B: Read<u8> + Write> Debug for RefreshInputError<B> {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl<B: Read<u8> + Write> ToString for RefreshInputError<B> {
     fn to_string(&self) -> String {
         match self {
