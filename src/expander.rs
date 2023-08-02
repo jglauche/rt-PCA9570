@@ -170,6 +170,11 @@ where
         expander
     }
 
+    // Destroys the driver and returns the I2C bus
+    pub fn destroy(self) -> B {
+        self.bus
+    }
+
     /// Returns a pins container without using any locks
     /// This is the most efficient way of using individual pins
     /// The downside is, that these pins are neither Send or Sync, so can only be used in single-threaded
