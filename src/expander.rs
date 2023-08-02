@@ -128,9 +128,6 @@ where
     /// First output register
     output: Bitmap<8>,
 
-    /// First polarity inversion register
-    polarity: Bitmap<8>,
-
     /// Configuration register
     configuration: Bitmap<8>,
 }
@@ -142,14 +139,6 @@ pub enum RefreshInputError<B: Write + Read<u8>> {
     ReadError(<B as Read>::Error),
 }
 
-const COMMAND_INPUT: u8 = 0x00;
-
-const COMMAND_OUTPUT: u8 = 0x02;
-
-const COMMAND_POLARITY: u8 = 0x04;
-
-const COMMAND_CONF: u8 = 0x06;
-
 impl<B> PCA9570<B>
 where
     B: Write<SevenBitAddress> + Read<SevenBitAddress>,
@@ -160,7 +149,6 @@ where
             address,
             input: Bitmap::<8>::new(),
             output: Bitmap::<8>::new(),
-            polarity: Bitmap::<8>::new(),
             configuration: Bitmap::<8>::new(),
         };
 
@@ -237,15 +225,9 @@ where
         self.write_output_state()
     }
 
-    /// Reveres/Resets the input polarity of the given pin
-    pub fn reverse_polarity(&mut self, id: PinID, reversed: bool) -> Result<(), <B as Write>::Error> {
-        self.polarity.set(id as usize, reversed);
-        self.write_polarity()
-    }
-
     /// Refreshes the input state
     pub fn refresh_input_state(&mut self) -> Result<(), RefreshInputError<B>> {
-        self.input = Bitmap::from_value(self.read_input_register(COMMAND_INPUT)?);
+        self.input = Bitmap::from_value(self.read_input_register()?);
         Ok(())
     }
 
@@ -263,9 +245,9 @@ where
    }
 
     /// Reads and returns the given input register
-    fn read_input_register(&mut self, command: u8) -> Result<u8, RefreshInputError<B>> {
+    fn read_input_register(&mut self) -> Result<u8, RefreshInputError<B>> {
         self.bus
-            .write(self.address, &[command])
+            .write(self.address, &[])
             .map_err(RefreshInputError::WriteError)?;
 
         let mut buffer: [u8; 1] = [0x0; 1];
@@ -278,22 +260,15 @@ where
     fn write_conf(&mut self) -> Result<(), <B as Write>::Error> {
         self.bus.write(
             self.address,
-            &[COMMAND_CONF, self.configuration.as_value().to_owned()],
+            &[self.configuration.as_value().to_owned()],
         )
     }
 
     /// Writes the output register
     pub fn write_output_state(&mut self) -> Result<(), <B as Write>::Error> {
-        self.bus.write(self.address, &[COMMAND_OUTPUT, self.output.as_value().to_owned()])
+        self.bus.write(self.address, &[self.output.as_value().to_owned()])
     }
 
-    /// Writes the polarity register
-    fn write_polarity(&mut self) -> Result<(), <B as Write>::Error> {
-        self.bus.write(
-            self.address,
-            &[COMMAND_POLARITY, self.polarity.as_value().to_owned()],
-        )
-    }
 }
 
 impl From<Mode> for bool {
