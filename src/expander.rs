@@ -10,8 +10,8 @@
 //! [PCA9570] instance is created using a I2CBus implementing the I2C traits of
 //! [embedded-hal](https://docs.rs/embedded-hal/latest/embedded_hal/blocking/i2c/index.html).
 //!```
-//! use pca9539::example::DummyI2CBus;
-//! use pca9539::expander::PCA9570;
+//! use pca9570::example::DummyI2CBus;
+//! use pca9570::expander::PCA9570;
 //!
 //! let i2c_bus = DummyI2CBus::default();
 //! // Assuming I2C device address 0x7C
@@ -19,10 +19,10 @@
 //! ```
 //! ## Changing mode
 //! ```
-//!# use pca9539::example::DummyI2CBus;
-//!# use pca9539::expander::Mode::{Input, Output};
-//!# use pca9539::expander::PCA9570;
-//!# use pca9539::expander::PinID::{Pin2, Pin4};
+//!# use pca9570::example::DummyI2CBus;
+//!# use pca9570::expander::Mode::{Input, Output};
+//!# use pca9570::expander::PCA9570;
+//!# use pca9570::expander::PinID::{Pin2, Pin4};
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
 //!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
@@ -35,9 +35,9 @@
 //! ```
 //! ## Reading input state
 //! ```
-//!# use pca9539::example::DummyI2CBus;
-//!# use pca9539::expander::PCA9570;
-//!# use pca9539::expander::PinID::Pin1;
+//!# use pca9570::example::DummyI2CBus;
+//!# use pca9570::expander::PCA9570;
+//!# use pca9570::expander::PinID::Pin1;
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
 //!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
@@ -49,10 +49,10 @@
 //! ```
 //! ## Setting output state
 //! ```
-//!# use pca9539::example::DummyI2CBus;
-//!# use pca9539::expander::Mode::Output;
-//!# use pca9539::expander::PCA9570;
-//!# use pca9539::expander::PinID::Pin1;
+//!# use pca9570::example::DummyI2CBus;
+//!# use pca9570::expander::Mode::Output;
+//!# use pca9570::expander::PCA9570;
+//!# use pca9570::expander::PinID::Pin1;
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
 //!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
@@ -66,12 +66,12 @@
 //! assert!(is_high);
 //! ```
 //! ## Invert input polarity
-//! PCA9570 has built-in hardware support for inverting input state. See [datasheet](<https://www.ti.com/lit/ds/symlink/pca9539.pdf?ts=1649342250975>)
+//! PCA9570 has built-in hardware support for inverting input state. See [datasheet](<https://www.ti.com/lit/ds/symlink/pca9570.pdf?ts=1649342250975>)
 //! for more details.
 //! ```
-//!# use pca9539::example::DummyI2CBus;
-//!# use pca9539::expander::PCA9570;
-//!# use pca9539::expander::PinID::{Pin1, Pin3};
+//!# use pca9570::example::DummyI2CBus;
+//!# use pca9570::expander::PCA9570;
+//!# use pca9570::expander::PinID::{Pin1, Pin3};
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
 //!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
@@ -112,7 +112,7 @@ pub enum Mode {
     Input,
 }
 
-/// Abstraction of [PCA9570](<https://www.ti.com/lit/ds/symlink/pca9539.pdf?ts=1649342250975>) I/O expander
+/// Abstraction of [PCA9570](<https://www.ti.com/lit/ds/symlink/pca9570.pdf?ts=1649342250975>) I/O expander
 pub struct PCA9570<B>
 where
     B: Write<SevenBitAddress> + Read<SevenBitAddress>,
