@@ -24,7 +24,7 @@
 //! assert!(pin01.is_high().unwrap());
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(feature = "strict", deny(warnings))]
-
+#[cfg(feature = "alloc")]
 extern crate alloc;
 extern crate embedded_hal;
 
