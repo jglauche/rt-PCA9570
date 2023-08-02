@@ -1,15 +1,13 @@
 [package]
-name = "pca9539"
-description = "Abstraciton for PCA9539 I/O expander"
-keywords = ["gpio", "PCA9539", "no_std", "expander", "ic"]
+name = "pca9570"
+description = "Abstraciton for PCA9570 I/O expander"
+keywords = ["gpio", "PCA9570", "no_std", "expander", "ic"]
 categories  = ["embedded", "hardware-support", "no-std"]
-authors = ["PEGASUS GmbH <info@pegasus-aero.de>"]
+authors = ["Jennifer Glauche <mail@cargo23.jglauche.de>", "[original fork] PEGASUS GmbH <info@pegasus-aero.de>"]
 license = "MIT OR Apache-2.0"
 version = "0.2.0"
 edition = "2021"
-repository = "https://github.com/pegasus-aero/rt-PCA9539"
 readme = "README.md"
-documentation = "https://docs.rs/pca9539"
 
 [dependencies]
 embedded-hal = { version = "0.2.7", features = ["unproven"] }

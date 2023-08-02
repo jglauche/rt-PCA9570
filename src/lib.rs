@@ -1,9 +1,9 @@
-//! # Abstraction of PCA9539
+//! # Abstraction of PCA9570
 //!
-//! Abstraction for I/O expander [PCA9539](<https://www.ti.com/lit/ds/symlink/pca9539.pdf?ts=1649342250975>).
+//! Abstraction for I/O expander [PCA9570]
 //! This crate offers the following features:
 //! * Individual pin instances, fully implementing [digital::v2 traits of embedded_hal](https://docs.rs/embedded-hal/latest/embedded_hal/digital/v2/index.html)
-//! * Central I/O control, s. [PCA9539 module](crate::expander)
+//! * Central I/O control, s. [PCA9570 module](crate::expander)
 //! * Two state management modes for reduced I2C overhead, s. [pins module](crate::pins)
 //! * Three concurrency models, s. [concurrency section](crate::pins#concurrency)
 //! * no_std support
@@ -12,12 +12,12 @@
 //! ```
 //! use pca9539::example::DummyI2CBus;
 //! use pca9539::expander::Bank::Bank0;
-//! use pca9539::expander::PCA9539;
+//! use pca9539::expander::PCA9570;
 //! use pca9539::expander::PinID::Pin1;
 //! use embedded_hal::digital::v2::InputPin;
 //!
 //! let i2c_bus = DummyI2CBus::default();
-//! let mut  expander = PCA9539::new(i2c_bus, 0x74);
+//! let mut  expander = PCA9570::new(i2c_bus, 0x7C);
 //! let pins = expander.pins();
 //!
 //! let pin01 = pins.get_pin(Bank0, Pin1);

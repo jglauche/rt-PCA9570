@@ -1,4 +1,4 @@
-use crate::expander::{Bank, Mode, PinID, RefreshInputError};
+use crate::expander::{Mode, PinID, RefreshInputError};
 use crate::guard::RefGuard;
 use crate::pins::{Input, Output, Pin, PinMode, RegularAccessMode};
 use core::marker::PhantomData;
@@ -10,13 +10,12 @@ where
     B: Write + Read,
     R: RefGuard<B>,
 {
-    pub fn regular(expander: &'a R, bank: Bank, id: PinID) -> Self {
+    pub fn regular(expander: &'a R, id: PinID) -> Self {
         Pin {
             expander,
             bus: PhantomData,
             mode: PhantomData,
             access_mode: PhantomData,
-            bank,
             id,
         }
     }
@@ -33,8 +32,8 @@ where
         let mut result = Ok(false);
 
         self.expander.access(|expander| {
-            result = match expander.refresh_input_state(self.bank) {
-                Ok(_) => Ok(expander.is_pin_input_high(self.bank, self.id)),
+            result = match expander.refresh_input_state() {
+                Ok(_) => Ok(expander.is_pin_input_high(self.id)),
                 Err(error) => Err(error),
             }
         });
@@ -66,8 +65,8 @@ where
         let mut result = Ok(());
 
         self.expander.access(|expander| {
-            expander.set_state(self.bank, self.id, state == PinState::High);
-            result = expander.write_output_state(self.bank);
+            expander.set_state(self.id, state == PinState::High);
+            result = expander.write_output_state();
         });
 
         result
@@ -111,7 +110,6 @@ where
 
         Ok(Pin {
             expander: self.expander,
-            bank: self.bank,
             id: self.id,
             bus: PhantomData,
             mode: PhantomData,
@@ -124,7 +122,6 @@ where
 
         let mut pin = Pin {
             expander: self.expander,
-            bank: self.bank,
             id: self.id,
             bus: PhantomData,
             mode: PhantomData,

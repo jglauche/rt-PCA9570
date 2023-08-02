@@ -1,86 +1,82 @@
-//! # Abstraction of PCA9539
+//! # Abstraction of PCA9570
 //!
-//! Central part of this crate is the struct [PCA9539], which either allows central I/O control or
+//! Central part of this crate is the struct [PCA9570], which either allows central I/O control or
 //! or alternatively offers a breakdown into individual pins.
 //!
 //! The following examples demonstrates central I/O control. For getting separate pin instances,
 //! see the [pins module](crate::pins).
 //!
 //! ## Setup
-//! [PCA9539] instance is created using a I2CBus implementing the I2C traits of
+//! [PCA9570] instance is created using a I2CBus implementing the I2C traits of
 //! [embedded-hal](https://docs.rs/embedded-hal/latest/embedded_hal/blocking/i2c/index.html).
 //!```
 //! use pca9539::example::DummyI2CBus;
-//! use pca9539::expander::PCA9539;
+//! use pca9539::expander::PCA9570;
 //!
 //! let i2c_bus = DummyI2CBus::default();
-//! // Assuming I2C device address 0x74
-//! let expander = PCA9539::new(i2c_bus, 0x74);
+//! // Assuming I2C device address 0x7C
+//! let expander = PCA9570::new(i2c_bus, 0x7C);
 //! ```
 //! ## Changing mode
 //! ```
 //!# use pca9539::example::DummyI2CBus;
-//!# use pca9539::expander::Bank::{Bank0, Bank1};
 //!# use pca9539::expander::Mode::{Input, Output};
-//!# use pca9539::expander::PCA9539;
+//!# use pca9539::expander::PCA9570;
 //!# use pca9539::expander::PinID::{Pin2, Pin4};
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9539::new(i2c_bus, 0x74);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
 //!#
-//! // Switch Pin02 to input mode
-//! expander.set_mode(Bank0, Pin2, Input).unwrap();
+//! // Switch Pin1 to input mode
+//! expander.set_mode(Pin1, Input).unwrap();
 //!
-//! // Switch Pin14 to output mode
-//! expander.set_mode(Bank1, Pin4, Output).unwrap();
+//! // Switch Pin2 to output mode
+//! expander.set_mode(Pin2, Output).unwrap();
 //! ```
 //! ## Reading input state
 //! ```
 //!# use pca9539::example::DummyI2CBus;
-//!# use pca9539::expander::Bank::Bank0;
-//!# use pca9539::expander::PCA9539;
+//!# use pca9539::expander::PCA9570;
 //!# use pca9539::expander::PinID::Pin1;
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9539::new(i2c_bus, 0x74);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
 //!#
-//! expander.refresh_input_state(Bank0).unwrap();
-//! let is_high = expander.is_pin_input_high(Bank0, Pin1);
+//! expander.refresh_input_state().unwrap();
+//! let is_high = expander.is_pin_input_high(Pin1);
 //!
 //! assert!(is_high);
 //! ```
 //! ## Setting output state
 //! ```
 //!# use pca9539::example::DummyI2CBus;
-//!# use pca9539::expander::Bank::Bank0;
 //!# use pca9539::expander::Mode::Output;
-//!# use pca9539::expander::PCA9539;
+//!# use pca9539::expander::PCA9570;
 //!# use pca9539::expander::PinID::Pin1;
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9539::new(i2c_bus, 0x74);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
 //!#
-//! expander.set_mode(Bank0, Pin1, Output);
+//! expander.set_mode(Pin1, Output);
 //!
-//! expander.set_state(Bank0, Pin1, true);
-//! expander.write_output_state(Bank0).unwrap();
+//! expander.set_state(Pin1, true);
+//! expander.write_output_state().unwrap();
 //!
-//! let is_high = expander.is_pin_output_high(Bank0, Pin1);
+//! let is_high = expander.is_pin_output_high(Pin1);
 //! assert!(is_high);
 //! ```
 //! ## Invert input polarity
-//! PCA9539 has built-in hardware support for inverting input state. See [datasheet](<https://www.ti.com/lit/ds/symlink/pca9539.pdf?ts=1649342250975>)
+//! PCA9570 has built-in hardware support for inverting input state. See [datasheet](<https://www.ti.com/lit/ds/symlink/pca9539.pdf?ts=1649342250975>)
 //! for more details.
 //! ```
 //!# use pca9539::example::DummyI2CBus;
-//!# use pca9539::expander::Bank::Bank0;
-//!# use pca9539::expander::PCA9539;
+//!# use pca9539::expander::PCA9570;
 //!# use pca9539::expander::PinID::{Pin1, Pin3};
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9539::new(i2c_bus, 0x74);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
 //!#
-//! expander.reverse_polarity(Bank0, Pin3, true).unwrap();
+//! expander.reverse_polarity(Pin3, true).unwrap();
 //! ```
 
 #[cfg(feature = "cortex-m")]
@@ -100,24 +96,13 @@ use embedded_hal::blocking::i2c::{Read, SevenBitAddress, Write};
 #[cfg(feature = "spin")]
 use spin::Mutex as SpinMutex;
 
-/// GPIO bank. PCA9539 has two with 7 pins each
-#[derive(Copy, Clone)]
-pub enum Bank {
-    Bank0,
-    Bank1,
-}
-
-/// GPIO pin ID. Builds together with bank an unique pin identification.
+/// GPIO pin ID.
 #[derive(Copy, Clone)]
 pub enum PinID {
     Pin0 = 0,
     Pin1 = 1,
     Pin2 = 2,
     Pin3 = 3,
-    Pin4 = 4,
-    Pin5 = 5,
-    Pin6 = 6,
-    Pin7 = 7,
 }
 
 /// GPIO mode
@@ -127,40 +112,27 @@ pub enum Mode {
     Input,
 }
 
-/// Abstraction of [PCA9539](<https://www.ti.com/lit/ds/symlink/pca9539.pdf?ts=1649342250975>) I/O expander
-pub struct PCA9539<B>
+/// Abstraction of [PCA9570](<https://www.ti.com/lit/ds/symlink/pca9539.pdf?ts=1649342250975>) I/O expander
+pub struct PCA9570<B>
 where
     B: Write<SevenBitAddress> + Read<SevenBitAddress>,
 {
     bus: B,
 
-    /// I2C slave address, dependents on A0 and A1 state.
-    /// A1 A0
-    ///  L  L => 0x74 (hexadecimal)
-    ///  L  H => 0x75 (hexadecimal)
-    ///  H  L => 0x76 (hexadecimal)
-    ///  H  H => 0x77 (hexadecimal)
+    /// I2C slave address 0x7C + R/!W bit
     address: u8,
 
     /// First input register
-    input_0: Bitmap<8>,
-    /// Second input register
-    input_1: Bitmap<8>,
+    input: Bitmap<8>,
 
     /// First output register
-    output_0: Bitmap<8>,
-    /// Second output register
-    output_1: Bitmap<8>,
+    output: Bitmap<8>,
 
     /// First polarity inversion register
-    polarity_0: Bitmap<8>,
-    /// Second polarity inversion register
-    polarity_1: Bitmap<8>,
+    polarity: Bitmap<8>,
 
-    /// First configuration register
-    configuration_0: Bitmap<8>,
-    /// Second configuration register
-    configuration_1: Bitmap<8>,
+    /// Configuration register
+    configuration: Bitmap<8>,
 }
 
 /// Wrapped I2C error when refreshing input state
@@ -170,19 +142,15 @@ pub enum RefreshInputError<B: Write + Read<u8>> {
     ReadError(<B as Read>::Error),
 }
 
-const COMMAND_INPUT_0: u8 = 0x00;
-const COMMAND_INPUT_1: u8 = 0x01;
+const COMMAND_INPUT: u8 = 0x00;
 
-const COMMAND_OUTPUT_0: u8 = 0x02;
-const COMMAND_OUTPUT_1: u8 = 0x03;
+const COMMAND_OUTPUT: u8 = 0x02;
 
-const COMMAND_POLARITY_0: u8 = 0x04;
-const COMMAND_POLARITY_1: u8 = 0x05;
+const COMMAND_POLARITY: u8 = 0x04;
 
-const COMMAND_CONF_0: u8 = 0x06;
-const COMMAND_CONF_1: u8 = 0x07;
+const COMMAND_CONF: u8 = 0x06;
 
-impl<B> PCA9539<B>
+impl<B> PCA9570<B>
 where
     B: Write<SevenBitAddress> + Read<SevenBitAddress>,
 {
@@ -190,20 +158,14 @@ where
         let mut expander = Self {
             bus,
             address,
-            input_0: Bitmap::<8>::new(),
-            input_1: Bitmap::<8>::new(),
-            output_0: Bitmap::<8>::new(),
-            output_1: Bitmap::<8>::new(),
-            polarity_0: Bitmap::<8>::new(),
-            polarity_1: Bitmap::<8>::new(),
-            configuration_0: Bitmap::<8>::new(),
-            configuration_1: Bitmap::<8>::new(),
+            input: Bitmap::<8>::new(),
+            output: Bitmap::<8>::new(),
+            polarity: Bitmap::<8>::new(),
+            configuration: Bitmap::<8>::new(),
         };
 
-        expander.output_0.invert();
-        expander.output_1.invert();
-        expander.configuration_0.invert();
-        expander.configuration_1.invert();
+        expander.output.invert();
+        expander.configuration.invert();
 
         expander
     }
@@ -233,71 +195,52 @@ where
     }
 
     /// Switches the given pin to the input/output mode by adjusting the configuration register
-    pub fn set_mode(&mut self, bank: Bank, id: PinID, mode: Mode) -> Result<(), <B as Write>::Error> {
-        match bank {
-            Bank::Bank0 => self.configuration_0.set(id as usize, mode.into()),
-            Bank::Bank1 => self.configuration_1.set(id as usize, mode.into()),
-        };
-        self.write_conf(bank)
+    pub fn set_mode(&mut self, id: PinID, mode: Mode) -> Result<(), <B as Write>::Error> {
+        self.configuration.set(id as usize, mode.into());
+        self.write_conf()
     }
 
-    /// Switches all pins of the given bank to output/input mode1
-    pub fn set_mode_all(&mut self, bank: Bank, mode: Mode) -> Result<(), <B as Write>::Error> {
+    /// Switches all pins to output/input mode1
+    pub fn set_mode_all(&mut self, mode: Mode) -> Result<(), <B as Write>::Error> {
         let mut bitset = Bitmap::<8>::new();
 
         if mode == Mode::Input {
             bitset.invert();
         }
 
-        match bank {
-            Bank::Bank0 => self.configuration_0 = bitset,
-            Bank::Bank1 => self.configuration_1 = bitset,
-        };
-        self.write_conf(bank)
+        self.configuration = bitset;
+        self.write_conf()
     }
 
     /// Sets the given output state by adjusting the output register
     /// Pin needs to be in OUTPUT mode for correct electrical state
     /// Note: This just updates the internal register, to make the changes effective,
     /// an additional call to `write_output_state()` is needed.
-    pub fn set_state(&mut self, bank: Bank, id: PinID, is_high: bool) {
-        match bank {
-            Bank::Bank0 => self.output_0.set(id as usize, is_high),
-            Bank::Bank1 => self.output_1.set(id as usize, is_high),
-        };
+    pub fn set_state(&mut self, id: PinID, is_high: bool) {
+        self.output.set(id as usize, is_high);
     }
 
-    /// Sets output state for all pins of a bank
-    pub fn set_state_all(&mut self, bank: Bank, is_high: bool) -> Result<(), <B as Write>::Error> {
+    /// Sets output state for all pins
+    pub fn set_state_all(&mut self, is_high: bool) -> Result<(), <B as Write>::Error> {
         let mut bitset = Bitmap::<8>::new();
 
         if is_high {
             bitset.invert();
         }
 
-        match bank {
-            Bank::Bank0 => self.output_0 = bitset,
-            Bank::Bank1 => self.output_1 = bitset,
-        };
-        self.write_output_state(bank)
+        self.output = bitset;
+        self.write_output_state()
     }
 
     /// Reveres/Resets the input polarity of the given pin
-    pub fn reverse_polarity(&mut self, bank: Bank, id: PinID, reversed: bool) -> Result<(), <B as Write>::Error> {
-        match bank {
-            Bank::Bank0 => self.polarity_0.set(id as usize, reversed),
-            Bank::Bank1 => self.polarity_1.set(id as usize, reversed),
-        };
-        self.write_polarity(bank)
+    pub fn reverse_polarity(&mut self, id: PinID, reversed: bool) -> Result<(), <B as Write>::Error> {
+        self.polarity.set(id as usize, reversed);
+        self.write_polarity()
     }
 
-    /// Refreshes the input state of the given bank
-    pub fn refresh_input_state(&mut self, bank: Bank) -> Result<(), RefreshInputError<B>> {
-        match bank {
-            Bank::Bank0 => self.input_0 = Bitmap::from_value(self.read_input_register(COMMAND_INPUT_0)?),
-            Bank::Bank1 => self.input_1 = Bitmap::from_value(self.read_input_register(COMMAND_INPUT_1)?),
-        };
-
+    /// Refreshes the input state
+    pub fn refresh_input_state(&mut self) -> Result<(), RefreshInputError<B>> {
+        self.input = Bitmap::from_value(self.read_input_register(COMMAND_INPUT)?);
         Ok(())
     }
 
@@ -305,20 +248,14 @@ where
     /// Pin needs to be in INPUT mode
     /// This method is using the cached register, for a updated result `refresh_input_state()` needs
     /// to be called beforehand
-    pub fn is_pin_input_high(&self, bank: Bank, id: PinID) -> bool {
-        match bank {
-            Bank::Bank0 => self.input_0.get(id as usize),
-            Bank::Bank1 => self.input_1.get(id as usize),
-        }
+    pub fn is_pin_input_high(&self, id: PinID) -> bool {
+        self.input.get(id as usize)
     }
 
     /// Returns true if the pins output state is set high
-    pub fn is_pin_output_high(&self, bank: Bank, id: PinID) -> bool {
-        match bank {
-            Bank::Bank0 => self.output_0.get(id as usize),
-            Bank::Bank1 => self.output_1.get(id as usize),
-        }
-    }
+    pub fn is_pin_output_high(&self, id: PinID) -> bool {
+        self.output.get(id as usize)
+   }
 
     /// Reads and returns the given input register
     fn read_input_register(&mut self, command: u8) -> Result<u8, RefreshInputError<B>> {
@@ -332,44 +269,25 @@ where
         Ok(buffer[0])
     }
 
-    /// Writes the configuration register of the given bank
-    fn write_conf(&mut self, bank: Bank) -> Result<(), <B as Write>::Error> {
-        match bank {
-            Bank::Bank0 => self.bus.write(
-                self.address,
-                &[COMMAND_CONF_0, self.configuration_0.as_value().to_owned()],
-            ),
-            Bank::Bank1 => self.bus.write(
-                self.address,
-                &[COMMAND_CONF_1, self.configuration_1.as_value().to_owned()],
-            ),
-        }
+    /// Writes the configuration register
+    fn write_conf(&mut self) -> Result<(), <B as Write>::Error> {
+        self.bus.write(
+            self.address,
+            &[COMMAND_CONF, self.configuration.as_value().to_owned()],
+        )
     }
 
-    /// Writes the output register of the given bank
-    pub fn write_output_state(&mut self, bank: Bank) -> Result<(), <B as Write>::Error> {
-        match bank {
-            Bank::Bank0 => self
-                .bus
-                .write(self.address, &[COMMAND_OUTPUT_0, self.output_0.as_value().to_owned()]),
-            Bank::Bank1 => self
-                .bus
-                .write(self.address, &[COMMAND_OUTPUT_1, self.output_1.as_value().to_owned()]),
-        }
+    /// Writes the output register
+    pub fn write_output_state(&mut self) -> Result<(), <B as Write>::Error> {
+        self.bus.write(self.address, &[COMMAND_OUTPUT, self.output.as_value().to_owned()])
     }
 
-    /// Writes the polarity register of the given bank
-    fn write_polarity(&mut self, bank: Bank) -> Result<(), <B as Write>::Error> {
-        match bank {
-            Bank::Bank0 => self.bus.write(
-                self.address,
-                &[COMMAND_POLARITY_0, self.polarity_0.as_value().to_owned()],
-            ),
-            Bank::Bank1 => self.bus.write(
-                self.address,
-                &[COMMAND_POLARITY_1, self.polarity_1.as_value().to_owned()],
-            ),
-        }
+    /// Writes the polarity register
+    fn write_polarity(&mut self) -> Result<(), <B as Write>::Error> {
+        self.bus.write(
+            self.address,
+            &[COMMAND_POLARITY, self.polarity.as_value().to_owned()],
+        )
     }
 }
 

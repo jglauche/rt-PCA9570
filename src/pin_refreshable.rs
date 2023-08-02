@@ -1,4 +1,4 @@
-use crate::expander::{Bank, Mode, PinID, RefreshInputError};
+use crate::expander::{Mode, PinID, RefreshInputError};
 use crate::guard::RefGuard;
 use crate::pins::{Input, Output, Pin, PinMode, RefreshMode};
 use core::convert::Infallible;
@@ -10,10 +10,7 @@ use embedded_hal::digital::v2::{toggleable, InputPin, IoPin, OutputPin, PinState
 pub trait RefreshableOutputPin {
     type Error;
 
-    /// Updates the output state of all pins of the same bank
-    fn update_bank(&self) -> Result<(), Self::Error>;
-
-    /// Updates the output state of all pins (on all banks)
+    /// Updates the output state of all pins
     fn update_all(&self) -> Result<(), Self::Error>;
 }
 
@@ -21,10 +18,7 @@ pub trait RefreshableOutputPin {
 pub trait RefreshableInputPin {
     type Error;
 
-    /// Refreshes the input state of all pins of the same bank
-    fn refresh_bank(&self) -> Result<(), Self::Error>;
-
-    /// Refreshes the input state of all pins (on all banks)
+    /// Refreshes the input state of all pins
     fn refresh_all(&self) -> Result<(), Self::Error>;
 }
 
@@ -33,23 +27,22 @@ where
     B: Write + Read,
     R: RefGuard<B>,
 {
-    pub fn refreshable(expander: &'a R, bank: Bank, id: PinID) -> Self {
+    pub fn refreshable(expander: &'a R, id: PinID) -> Self {
         Self {
             expander,
             bus: PhantomData,
-            bank,
             id,
             access_mode: PhantomData,
             mode: PhantomData,
         }
     }
 
-    /// Refreshes the input state of the given bank
-    fn refresh(&self, bank: Bank) -> Result<(), RefreshInputError<B>> {
+    /// Refreshes the input state
+    fn refresh(&self) -> Result<(), RefreshInputError<B>> {
         let mut result = Ok(());
 
         self.expander.access(|expander| {
-            result = expander.refresh_input_state(bank);
+            result = expander.refresh_input_state();
         });
 
         result
@@ -63,15 +56,9 @@ where
 {
     type Error = RefreshInputError<B>;
 
-    /// Refreshes the input state of all pins of the same bank
-    fn refresh_bank(&self) -> Result<(), Self::Error> {
-        self.refresh(self.bank)
-    }
-
-    /// Refreshes the input state of all pins (on all banks)
+    /// Refreshes the input state of all pins
     fn refresh_all(&self) -> Result<(), Self::Error> {
-        self.refresh(Bank::Bank0)?;
-        self.refresh(Bank::Bank1)
+        self.refresh()
     }
 }
 
@@ -82,15 +69,9 @@ where
 {
     type Error = <B as Write>::Error;
 
-    /// Updates the output state of all pins of the same bank
-    fn update_bank(&self) -> Result<(), Self::Error> {
-        self.update(self.bank)
-    }
-
-    /// Updates the output state of all pins (on all banks)
+    /// Updates the output state of all pins
     fn update_all(&self) -> Result<(), Self::Error> {
-        self.update(Bank::Bank0)?;
-        self.update(Bank::Bank1)
+        self.update()
     }
 }
 
@@ -99,12 +80,12 @@ where
     B: Write + Read,
     R: RefGuard<B>,
 {
-    /// Writes the output state of the given bank
-    fn update(&self, bank: Bank) -> Result<(), <B as Write>::Error> {
+    /// Writes the output state
+    fn update(&self) -> Result<(), <B as Write>::Error> {
         let mut result = Ok(());
 
         self.expander.access(|expander| {
-            result = expander.write_output_state(bank);
+            result = expander.write_output_state();
         });
 
         result
@@ -122,7 +103,7 @@ where
         let mut state = false;
 
         self.expander.access(|expander| {
-            state = expander.is_pin_input_high(self.bank, self.id);
+            state = expander.is_pin_input_high(self.id);
         });
 
         Ok(state)
@@ -150,7 +131,7 @@ where
 
     fn set_state(&mut self, state: PinState) -> Result<(), Self::Error> {
         self.expander.access(|expander| {
-            expander.set_state(self.bank, self.id, state == PinState::High);
+            expander.set_state(self.id, state == PinState::High);
         });
 
         Ok(())
@@ -192,7 +173,6 @@ where
 
         Ok(Pin {
             expander: self.expander,
-            bank: self.bank,
             id: self.id,
             bus: PhantomData,
             mode: PhantomData,
@@ -205,7 +185,6 @@ where
 
         let mut pin = Pin {
             expander: self.expander,
-            bank: self.bank,
             id: self.id,
             bus: PhantomData,
             mode: PhantomData,
@@ -213,7 +192,7 @@ where
         };
 
         let _ = pin.set_state(state);
-        pin.update_bank()?;
+        pin.update_all()?;
         Ok(pin)
     }
 }

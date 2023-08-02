@@ -10,16 +10,16 @@
 //! In the best case, the I2C overhead is reduced to one eighth. See [below examples](#refreshable-access-mode) for more details.
 //!
 //! ## Setup
-//! Individual pins can be fetched using [PCA9539](crate::expander::PCA9539) instance.
+//! Individual pins can be fetched using [PCA9570](crate::expander::PCA9570) instance.
 //! Different concurrency models are supported, see [Concurrency](#Concurrency) section for more details.
 //! ```
 //! use pca9539::example::DummyI2CBus;
 //! use pca9539::expander::Bank::Bank0;
-//! use pca9539::expander::PCA9539;
+//! use pca9539::expander::PCA9570;
 //! use pca9539::expander::PinID::Pin1;
 //!
 //! let i2c_bus = DummyI2CBus::default();
-//! let mut  expander = PCA9539::new(i2c_bus, 0x74);
+//! let mut  expander = PCA9570::new(i2c_bus, 0x7C);
 //! let pins = expander.pins();
 //! ```
 //! ## State management modes
@@ -29,12 +29,12 @@
 //! ```
 //!# use pca9539::example::DummyI2CBus;
 //!# use pca9539::expander::Bank::{Bank0, Bank1};
-//!# use pca9539::expander::PCA9539;
+//!# use pca9539::expander::PCA9570;
 //!# use pca9539::expander::PinID::{Pin1, Pin2, Pin4};
 //!# use embedded_hal::digital::v2::{InputPin, IoPin, PinState, OutputPin};
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9539::new(i2c_bus, 0x74);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
 //! let pins = expander.pins();
 //! let pin12 = pins.get_pin(Bank1, Pin2);
 //! let mut  pin04 = pins.get_pin(Bank0, Pin4).into_output_pin(PinState::Low).unwrap();
@@ -51,45 +51,41 @@
 //!
 //! In contrast to the previous method, the state must be explicitly updated/refreshed here.
 //! It does not matter which pin is used to call update/refresh.
-//! The state is always updated for all pins or pins of the same bank.
 //!
 //! As `is_high()` and `is_low()` are just acting on cached state, calls of this method can not fail.
 //! #### Input example
 //! ```
 //!# use pca9539::example::DummyI2CBus;
 //!# use pca9539::expander::Bank::{Bank0, Bank1};
-//!# use pca9539::expander::PCA9539;
+//!# use pca9539::expander::PCA9570;
 //!# use pca9539::expander::PinID::{Pin0, Pin1, Pin2, Pin3, Pin4};
 //!# use embedded_hal::digital::v2::{InputPin, IoPin, PinState, OutputPin};
 //!# use pca9539::pins::RefreshableInputPin;
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9539::new(i2c_bus, 0x74);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
 //! let pins = expander.pins();
 //! let pin00 = pins.get_refreshable_pin(Bank0, Pin0);
 //! let pin10 = pins.get_refreshable_pin(Bank1, Pin0);
 //! let pin11 = pins.get_refreshable_pin(Bank1, Pin1);
 //!
 //! // Updates the input state of just Bank1. So input state of Pin10 and Pin11 is now up2date
-//! pin10.refresh_bank().unwrap();
 //! assert!(pin10.is_high().unwrap());
 //! assert!(pin11.is_low().unwrap());
 //!
-//! // Updates the input state of all banks. So all pins are now up2date
-//! pin00.refresh_bank().unwrap();
 //! assert!(pin00.is_low().unwrap());
 //! ```
 //! #### Output example
 //! ```
 //!# use pca9539::example::DummyI2CBus;
 //!# use pca9539::expander::Bank::{Bank0, Bank1};
-//!# use pca9539::expander::PCA9539;
+//!# use pca9539::expander::PCA9570;
 //!# use pca9539::expander::PinID::{Pin0, Pin1, Pin2, Pin3, Pin4};
 //!# use embedded_hal::digital::v2::{InputPin, IoPin, PinState, OutputPin};
 //!# use pca9539::pins::RefreshableOutputPin;
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9539::new(i2c_bus, 0x74);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
 //! let pins = expander.pins();
 //! let mut pin00 = pins.get_refreshable_pin(Bank0, Pin0).into_output_pin(PinState::Low).unwrap();
 //! let mut pin10 = pins.get_refreshable_pin(Bank1, Pin0).into_output_pin(PinState::Low).unwrap();
@@ -99,12 +95,6 @@
 //! pin10.set_high().unwrap();
 //! pin11.set_state(PinState::High).unwrap();
 //!
-//! // Writes the output state of just Bank1.
-//! pin10.update_bank().unwrap();
-//!
-//! // Writes the output state of all banks.
-//! pin00.update_all().unwrap();
-//! ```
 //!
 //! ## Concurrency
 //! As the pins are using a shared reference, some kind of concurrency management is required.
@@ -118,10 +108,10 @@
 //! and interrupt-free applications
 //! ```
 //!# use pca9539::example::DummyI2CBus;
-//!# use pca9539::expander::PCA9539;
+//!# use pca9539::expander::PCA9570;
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9539::new(i2c_bus, 0x74);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
 //! let pins = expander.pins();
 //! ```
 //!
@@ -133,10 +123,10 @@
 //!
 //! ```
 //!# use pca9539::example::DummyI2CBus;
-//!# use pca9539::expander::PCA9539;
+//!# use pca9539::expander::PCA9570;
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9539::new(i2c_bus, 0x74);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
 //!# #[cfg(feature = "cortex-m")]
 //! let pins = expander.pins_cs_mutex();
 //! ```
@@ -151,14 +141,14 @@
 //!
 //! ```
 //!# use pca9539::example::DummyI2CBus;
-//!# use pca9539::expander::PCA9539;
+//!# use pca9539::expander::PCA9570;
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9539::new(i2c_bus, 0x74);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
 //!# #[cfg(feature = "spin")]
 //! let pins = expander.pins_spin_mutex();
 //! ```
-use crate::expander::{Bank, Mode, PinID};
+use crate::expander::{Mode, PinID};
 use crate::guard::RefGuard;
 use core::marker::PhantomData;
 use embedded_hal::blocking::i2c::{Read, Write};
@@ -181,16 +171,16 @@ impl<B: Write + Read, R: RefGuard<B>> Pins<B, R> {
 
     /// Returns an individual pin, which state gets updated synchronously
     /// **The library does not prevent multiple parallel instances of the same pin.**
-    pub fn get_pin(&self, bank: Bank, id: PinID) -> Pin<B, R, Input, RegularAccessMode> {
-        Pin::regular(&self.guard, bank, id)
+    pub fn get_pin(&self, id: PinID) -> Pin<B, R, Input, RegularAccessMode> {
+        Pin::regular(&self.guard, id)
     }
 
     /// Returns an individual pin, which is using a cached state
     /// The status is explicitly updated. This allows a more efficient status query and assignment,
     /// as the status is only updated once for all pins.
     /// **The library does not prevent multiple parallel instances of the same pin.**
-    pub fn get_refreshable_pin(&self, bank: Bank, id: PinID) -> Pin<B, R, Input, RefreshMode> {
-        Pin::refreshable(&self.guard, bank, id)
+    pub fn get_refreshable_pin(&self, id: PinID) -> Pin<B, R, Input, RefreshMode> {
+        Pin::refreshable(&self.guard, id)
     }
 }
 
@@ -230,7 +220,6 @@ where
     A: AccessMode,
 {
     pub(crate) expander: &'a R,
-    pub(crate) bank: Bank,
     pub(crate) id: PinID,
 
     pub(crate) bus: PhantomData<fn(B) -> B>,
@@ -249,7 +238,7 @@ where
         let mut result = Ok(());
 
         self.expander.access(|expander| {
-            result = expander.reverse_polarity(self.bank, self.id, invert);
+            result = expander.reverse_polarity(self.id, invert);
         });
 
         result
@@ -267,7 +256,7 @@ where
     pub(crate) fn is_pin_output_high(&self) -> bool {
         let mut is_high = false;
         self.expander
-            .access(|expander| is_high = expander.is_pin_output_high(self.bank, self.id));
+            .access(|expander| is_high = expander.is_pin_output_high(self.id));
 
         is_high
     }
@@ -285,7 +274,7 @@ where
         let mut result = Ok(());
 
         self.expander.access(|expander| {
-            result = expander.set_mode(self.bank, self.id, mode);
+            result = expander.set_mode(self.id, mode);
         });
 
         result
