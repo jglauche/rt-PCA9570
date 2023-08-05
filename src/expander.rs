@@ -227,7 +227,9 @@ where
 
     /// Refreshes the input state
     pub fn refresh_input_state(&mut self) -> Result<(), RefreshInputError<B>> {
-        self.input = Bitmap::from_value(self.read_input_register()?);
+        let mut bitset = Bitmap::from_value(self.read_input_register()?);
+        bitset.invert();
+        self.input = bitset;
         Ok(())
     }
 
