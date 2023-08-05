@@ -14,8 +14,8 @@
 //! use pca9570::expander::PCA9570;
 //!
 //! let i2c_bus = DummyI2CBus::default();
-//! // Assuming I2C device address 0x7C
-//! let expander = PCA9570::new(i2c_bus, 0x7C);
+//! // Assuming I2C device address 0x24
+//! let expander = PCA9570::new(i2c_bus, 0x24);
 //! ```
 //! ## Changing mode
 //! ```
@@ -25,7 +25,7 @@
 //!# use pca9570::expander::PinID::{Pin2, Pin4};
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x24);
 //!#
 //! // Switch Pin1 to input mode
 //! expander.set_mode(Pin1, Input).unwrap();
@@ -40,7 +40,7 @@
 //!# use pca9570::expander::PinID::Pin1;
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x24);
 //!#
 //! expander.refresh_input_state().unwrap();
 //! let is_high = expander.is_pin_input_high(Pin1);
@@ -55,7 +55,7 @@
 //!# use pca9570::expander::PinID::Pin1;
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x24);
 //!#
 //! expander.set_mode(Pin1, Output);
 //!
@@ -74,7 +74,7 @@
 //!# use pca9570::expander::PinID::{Pin1, Pin3};
 //!#
 //!# let i2c_bus = DummyI2CBus::default();
-//!# let mut  expander = PCA9570::new(i2c_bus, 0x7C);
+//!# let mut  expander = PCA9570::new(i2c_bus, 0x24);
 //!#
 //! expander.reverse_polarity(Pin3, true).unwrap();
 //! ```
@@ -119,7 +119,7 @@ where
 {
     bus: B,
 
-    /// I2C slave address 0x7C + R/!W bit
+    /// I2C slave address 0x24 + R/!W bit
     address: u8,
 
     /// First input register

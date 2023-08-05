@@ -47,7 +47,7 @@ impl BusMockBuilder {
         let data_vec = data.to_vec();
 
         self.bus.expect_write().times(times).returning(move |address, buffer| {
-            assert_eq!(0x7C, address);
+            assert_eq!(0x24, address);
             assert_eq!(data_vec.len(), buffer.len());
             assert_eq!(data_vec.as_slice(), buffer);
             Ok(())
@@ -58,7 +58,7 @@ impl BusMockBuilder {
 
     pub fn expect_read(mut self, times: usize, data: u8) -> Self {
         self.bus.expect_read().times(times).returning(move |address, buffer| {
-            assert_eq!(0x7C, address);
+            assert_eq!(0x24, address);
             assert_eq!(1, buffer.len());
             buffer[0] = data;
 
@@ -70,7 +70,7 @@ impl BusMockBuilder {
 
     pub fn write_error(mut self, command: u8) -> Self {
         self.bus.expect_write().times(1).returning(move |address, buffer| {
-            assert_eq!(0x7C, address);
+            assert_eq!(0x24, address);
             assert_eq!(command, buffer[0]);
             Err(WriteError::Error1)
         });
@@ -80,7 +80,7 @@ impl BusMockBuilder {
 
     pub fn read_error(mut self) -> Self {
         self.bus.expect_read().times(1).returning(move |address, _| {
-            assert_eq!(0x7C, address);
+            assert_eq!(0x24, address);
             Err(ReadError::Error1)
         });
 

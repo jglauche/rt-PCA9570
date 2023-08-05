@@ -17,7 +17,7 @@
 //! use embedded_hal::digital::v2::InputPin;
 //!
 //! let i2c_bus = DummyI2CBus::default();
-//! let mut  expander = PCA9570::new(i2c_bus, 0x7C);
+//! let mut  expander = PCA9570::new(i2c_bus, 0x24);
 //! let pins = expander.pins();
 //!
 //! let pin01 = pins.get_pin(Bank0, Pin1);
