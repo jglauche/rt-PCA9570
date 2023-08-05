@@ -233,6 +233,10 @@ where
         Ok(())
     }
 
+    pub fn input_as_value(&self) -> u8 {
+        *self.input.as_value()
+    }
+
     /// Returns true if the given pin input is high
     /// Pin needs to be in INPUT mode
     /// This method is using the cached register, for a updated result `refresh_input_state()` needs
